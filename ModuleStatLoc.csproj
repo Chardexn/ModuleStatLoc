@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\build\PsmMod.props" />
+
+  <PropertyGroup>
+    <AssemblyName>ModuleStatLoc</AssemblyName>
+    <RootNamespace>ModuleStatLoc</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Unity.Localization" Condition="Exists('$(ManagedDir)\Unity.Localization.dll')">
+      <HintPath>$(ManagedDir)\Unity.Localization.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <Import Project="..\build\PsmMod.targets" />
+</Project>

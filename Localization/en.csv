@@ -1,0 +1,12 @@
+# key,text
+mech_module_stat_performance,速度
+mech_module_stat_efficiency,节能
+mech_module_stat_quality,品质
+mech_module_stat_performance_en,Performance
+mech_module_stat_efficiency_en,Efficiency
+mech_module_stat_quality_en,Quality
+suffix_format,{0}（{1}）
+
+cfg_suffix,Show original name after translation
+cfg_suffix_tip,None: new name only. Original: 速度（性能） using the vanilla Chinese name. English: 速度（Performance）. Takes effect the next time you load a save.
+dump_name,Dump module-related Chinese entries

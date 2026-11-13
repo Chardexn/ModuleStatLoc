@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Manifest>
+  <ID>module_stat_loc</ID>
+  <Name>模组属性翻译优化</Name>
+  <Author>kirkxia</Author>
+  <ModVersion>1.0</ModVersion>
+  <Description>将模组属性「性能/效率/质量」改为「速度/节能/品质」，可选括号显示原名。</Description>
+  <GameVersions>
+    <Version>1.0.0</Version>
+  </GameVersions>
+  <Prerequisites />
+  <Assemblies>
+    <Assembly>ModuleStatLoc.dll</Assembly>
+  </Assemblies>
+  <!-- 大多数 mod 为空。用到 files/network/process/steam/steam-auth/window 时才声明；游戏内 F8 运行 mod-scan module_stat_loc 自查 -->
+  <Capabilities />
+</Manifest>

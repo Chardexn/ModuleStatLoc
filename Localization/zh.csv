@@ -1,0 +1,12 @@
+# key,文本
+mech_module_stat_performance,速度
+mech_module_stat_efficiency,节能
+mech_module_stat_quality,品质
+mech_module_stat_performance_en,Performance
+mech_module_stat_efficiency_en,Efficiency
+mech_module_stat_quality_en,Quality
+suffix_format,{0}（{1}）
+
+cfg_suffix,译名后显示原名
+cfg_suffix_tip,None：只显示新译名。Original：速度（性能）。English：速度（Performance）。括号内分别为游戏当前中文原文或英文名。改完后进游戏即生效。
+dump_name,导出模组相关中文条目
