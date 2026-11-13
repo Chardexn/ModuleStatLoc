@@ -1,4 +1,6 @@
 bin/
 obj/
+dist/
 .vs/
 *.user
+GameDir.local.props

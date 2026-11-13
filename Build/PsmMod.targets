@@ -1,0 +1,91 @@
+<Project>
+  <!-- PSM 工作区共享构建目标（在 mod 的 .csproj 末尾 Import）。 -->
+
+  <PropertyGroup>
+    <ModFolderName Condition="'$(ModFolderName)' == ''">$(MSBuildProjectName)</ModFolderName>
+    <ModInstallDir Condition="'$(ModInstallDir)' == ''">$(GameDir)\Mods\$(ModFolderName)</ModInstallDir>
+    <ModPackDir Condition="'$(ModPackDir)' == ''">$(MSBuildProjectDirectory)\dist\$(ModFolderName)</ModPackDir>
+  </PropertyGroup>
+
+  <!-- 游戏程序集：全部 Private=false，绝不随 mod 发布（自带同名 DLL 会被扫描器拒绝） -->
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp"><HintPath>$(ManagedDir)\Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="0Harmony"><HintPath>$(ManagedDir)\0Harmony.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine"><HintPath>$(ManagedDir)\UnityEngine.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(ManagedDir)\UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+
+  <!-- 常用的可选程序集：存在才引用；没用到的引用不会写进编译产物 -->
+  <ItemGroup>
+    <Reference Include="UnityEngine.UI" Condition="Exists('$(ManagedDir)\UnityEngine.UI.dll')"><HintPath>$(ManagedDir)\UnityEngine.UI.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.UIModule" Condition="Exists('$(ManagedDir)\UnityEngine.UIModule.dll')"><HintPath>$(ManagedDir)\UnityEngine.UIModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.AudioModule" Condition="Exists('$(ManagedDir)\UnityEngine.AudioModule.dll')"><HintPath>$(ManagedDir)\UnityEngine.AudioModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.InputLegacyModule" Condition="Exists('$(ManagedDir)\UnityEngine.InputLegacyModule.dll')"><HintPath>$(ManagedDir)\UnityEngine.InputLegacyModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.JSONSerializeModule" Condition="Exists('$(ManagedDir)\UnityEngine.JSONSerializeModule.dll')"><HintPath>$(ManagedDir)\UnityEngine.JSONSerializeModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.ImageConversionModule" Condition="Exists('$(ManagedDir)\UnityEngine.ImageConversionModule.dll')"><HintPath>$(ManagedDir)\UnityEngine.ImageConversionModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.IMGUIModule" Condition="Exists('$(ManagedDir)\UnityEngine.IMGUIModule.dll')"><HintPath>$(ManagedDir)\UnityEngine.IMGUIModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.TextRenderingModule" Condition="Exists('$(ManagedDir)\UnityEngine.TextRenderingModule.dll')"><HintPath>$(ManagedDir)\UnityEngine.TextRenderingModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Unity.TextMeshPro" Condition="Exists('$(ManagedDir)\Unity.TextMeshPro.dll')"><HintPath>$(ManagedDir)\Unity.TextMeshPro.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Newtonsoft.Json" Condition="Exists('$(ManagedDir)\Newtonsoft.Json.dll')"><HintPath>$(ManagedDir)\Newtonsoft.Json.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="DOTween" Condition="Exists('$(ManagedDir)\DOTween.dll')"><HintPath>$(ManagedDir)\DOTween.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+
+  <!-- 随 mod 发布的非代码文件：清单、预览图和固定名称的资源文件夹 -->
+  <ItemGroup>
+    <ModFile Include="manifest.xml" />
+    <ModFile Include="preview.png" Condition="Exists('preview.png')" />
+    <ModFile Include="Textures\**;Sounds\**;Localization\**;LootTables\**;Books\**"
+             Exclude="**\*.psd;**\*.aseprite;**\*.kra;**\*.zip;**\*.7z;**\*.rar;**\*.exe;**\*.bat;**\*.ps1;**\*.py;**\_*" />
+    <None Remove="Textures\**;Sounds\**;Localization\**;LootTables\**;Books\**" />
+  </ItemGroup>
+
+  <Target Name="PsmCheckGameDir" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="!Exists('$(ManagedDir)\Assembly-CSharp.dll')"
+           Text="找不到游戏程序集：$(ManagedDir)\Assembly-CSharp.dll。请在本目录的 GameDir.local.props（见 GameDir.local.props.example）或工作区 PSM.local.props 中设置 GameDir，或设置环境变量 PSM_GAME_DIR。" />
+  </Target>
+
+  <!-- 编译前校验 manifest.xml 的必填项，避免游戏静默跳过 mod 文件夹 -->
+  <Target Name="PsmValidateManifest" BeforeTargets="CoreCompile">
+    <Error Condition="!Exists('manifest.xml')" Text="缺少 manifest.xml：游戏会直接跳过没有清单的 mod 文件夹。" />
+    <XmlPeek XmlInputPath="manifest.xml" Query="/Manifest/ID/text()" Condition="Exists('manifest.xml')">
+      <Output TaskParameter="Result" ItemName="_PsmManifestId" />
+    </XmlPeek>
+    <XmlPeek XmlInputPath="manifest.xml" Query="/Manifest/Assemblies/Assembly/text()" Condition="Exists('manifest.xml')">
+      <Output TaskParameter="Result" ItemName="_PsmManifestAssembly" />
+    </XmlPeek>
+    <XmlPeek XmlInputPath="manifest.xml" Query="/Manifest/Capabilities" Condition="Exists('manifest.xml')">
+      <Output TaskParameter="Result" ItemName="_PsmManifestCapabilities" />
+    </XmlPeek>
+    <PropertyGroup>
+      <_PsmAssemblyList>;@(_PsmManifestAssembly);</_PsmAssemblyList>
+    </PropertyGroup>
+    <Error Condition="'@(_PsmManifestId)' == ''" Text="manifest.xml 缺少 &lt;ID&gt;。" />
+    <Error Condition="'@(_PsmManifestCapabilities)' == ''" Text="manifest.xml 缺少 &lt;Capabilities&gt; 元素（没有能力也要写 &lt;Capabilities /&gt;）。" />
+    <Error Condition="!$(_PsmAssemblyList.Contains(';$(TargetFileName);'))"
+           Text="manifest.xml 的 &lt;Assemblies&gt; 没有列出 $(TargetFileName)：未列出的 DLL 不会加载，且会导致启用被拒绝。" />
+  </Target>
+
+  <Target Name="PsmPackMod" AfterTargets="Build">
+    <RemoveDir Directories="$(ModPackDir)" Condition="Exists('$(ModPackDir)')" />
+    <MakeDir Directories="$(ModPackDir)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModPackDir)" />
+    <Copy SourceFiles="@(ModFile)"
+          DestinationFiles="@(ModFile->'$(ModPackDir)\%(RelativeDir)%(Filename)%(Extension)')" />
+    <Message Importance="high" Text="已打包到 $(ModPackDir)" />
+  </Target>
+
+  <Target Name="PsmInstallMod" AfterTargets="PsmPackMod" Condition="'$(InstallMod)' == 'true' and Exists('$(ManagedDir)\Assembly-CSharp.dll')">
+    <MakeDir Directories="$(ModInstallDir)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModInstallDir)" Retries="2" RetryDelayMilliseconds="500" />
+    <Copy SourceFiles="@(ModFile)"
+          DestinationFiles="@(ModFile->'$(ModInstallDir)\%(RelativeDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <_PsmInstalledDll Include="$(ModInstallDir)\*.dll;$(ModInstallDir)\Assemblies\*.dll" />
+      <_PsmStrayDll Include="@(_PsmInstalledDll)" Condition="!$(_PsmAssemblyList.Contains(';%(Filename)%(Extension);')) and !$(_PsmAssemblyList.Contains(';Assemblies/%(Filename)%(Extension);'))" />
+    </ItemGroup>
+    <Warning Condition="'@(_PsmStrayDll)' != ''"
+             Text="安装目录中有 manifest 未列出的 DLL，游戏会拒绝启用该 mod：@(_PsmStrayDll)。请删除或在 &lt;Assemblies&gt; 中列出。" />
+    <Message Importance="high" Text="已安装到 $(ModInstallDir)" />
+  </Target>
+</Project>

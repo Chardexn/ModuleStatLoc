@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\build\PsmMod.props" />
+  <Import Project="Build\PsmMod.props" />
 
   <PropertyGroup>
     <AssemblyName>ModuleStatLoc</AssemblyName>
@@ -13,5 +13,5 @@
     </Reference>
   </ItemGroup>
 
-  <Import Project="..\build\PsmMod.targets" />
+  <Import Project="Build\PsmMod.targets" />
 </Project>

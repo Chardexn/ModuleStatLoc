@@ -1,27 +1,56 @@
-# 模组属性翻译优化（ModuleStatLoc）
+# 模组属性翻译优化
 
-《深空当铺》(Probably Stolen) 模组。将机器模组属性「性能 / 效率 / 质量」改为更直观的「速度 / 节能 / 品质」，可选在译名后用括号显示原名。
+《深空当铺》模组：把机器模组上的「性能 / 效率 / 质量」改成更好懂的「速度 / 节能 / 品质」。可选在后面用括号标出原名。
 
-A localization tweak for *Probably Stolen*. Renames module stats 性能 / 效率 / 质量 to 速度 / 节能 / 品质, with an optional original-name suffix.
+A *Probably Stolen* localization tweak for machine-module stat names.
 
-## 功能
+**适配游戏：** 1.0.0.13（商店标签 100-Rev13）  
+**作者：** kirkxia
 
-- 性能 → 速度；效率 → 节能；质量 → 品质
-- 可选后缀：只显示新译名、新译名（性能）、或新译名（Performance）
-- 改完设置后进游戏即生效（无需重启）
+## 做什么
 
-设置在游戏「模组」菜单的齿轮里。
+原版三个词容易混：
+
+| 原名 | 本模组 |
+|---|---|
+| 性能 | 速度 |
+| 效率 | 节能 |
+| 质量 | 品质 |
+
+只改你看见的字，不改数值、不改机器行为。
+
+## 怎么用
+
+1. 把模组文件夹放到游戏的 `Mods\` 下，启动游戏，在「模组」菜单里**启用**，然后**重启**一次。
+2. 之后看模组、机器说明时就是新译名。
+3. 想对照原文时，打开模组齿轮，把「译名后显示原名」改成「原名」或「英文」。改完进存档就会生效。
+
+## 设置
+
+游戏主菜单 → 模组 → 本模组右侧齿轮：
+
+| 选项 | 效果 |
+|---|---|
+| 不显示 | 只显示「速度 / 节能 / 品质」 |
+| 原名 | 速度（性能） |
+| 英文 | 速度（Performance） |
 
 ## 安装
 
-把编译产物放到游戏的 `Mods/ModuleStatLoc/`（需包含 `manifest.xml`、`ModuleStatLoc.dll` 以及 `Localization/`）。启用后重启游戏。
+把整个模组文件夹放到：
 
-本仓库是源码，作为作者私有工作区的 Git 子模块编译：项目引用工作区共享的 `build/PsmMod.props`。单独克隆后无法直接 `dotnet build`，请把本目录放到该工作区根目录后再编译，或把已编译的 DLL 与资源复制进游戏 `Mods/`。
+`…\steamapps\common\Probably Stolen\Mods\ModuleStatLoc\`
 
-## 清单
+文件夹里至少要有 `manifest.xml`、`ModuleStatLoc.dll`、`Localization\`。启用后必须重启游戏。
 
-| 字段 | 值 |
-|---|---|
-| ID | `module_stat_loc` |
-| 游戏版本 | `1.0.0` |
-| 能力 | 无 |
+从源码编译（需要 [.NET SDK](https://dotnet.microsoft.com/download) 6.0+ 和一份正式版游戏）：
+
+```powershell
+dotnet build -c Release
+```
+
+会生成 `dist\ModuleStatLoc\`，并自动复制到游戏的 `Mods\ModuleStatLoc\`。游戏不在默认 Steam 路径时，复制 `GameDir.local.props.example` 为 `GameDir.local.props` 并改里面的路径。
+
+## 卸载
+
+在模组菜单里停用，重启即可。只改显示用的文本，不影响存档。

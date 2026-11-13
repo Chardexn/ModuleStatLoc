@@ -1,0 +1,10 @@
+<Project>
+  <!--
+    复制为 GameDir.local.props 后按本机情况修改；GameDir.local.props 不提交。
+    不创建也可以：默认使用 Steam 默认安装路径。
+  -->
+  <PropertyGroup>
+    <GameDir>C:\Program Files (x86)\Steam\steamapps\common\Probably Stolen</GameDir>
+    <!-- <InstallMod>false</InstallMod> -->
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,27 @@
+<Project>
+  <!--
+    PSM 工作区共享构建配置（在 mod 的 .csproj 顶部 Import）。
+    本机游戏路径等个人设置写在仓库根目录的 PSM.local.props（从 PSM.local.props.example 复制），
+    也可以用环境变量 PSM_GAME_DIR 覆盖。
+  -->
+  <!-- 独立克隆：写在 .csproj 旁的 GameDir.local.props；工作区子模块：上一级的 PSM.local.props -->
+  <Import Project="$(MSBuildProjectDirectory)\GameDir.local.props" Condition="Exists('$(MSBuildProjectDirectory)\GameDir.local.props')" />
+  <Import Project="$(MSBuildProjectDirectory)\..\PSM.local.props" Condition="Exists('$(MSBuildProjectDirectory)\..\PSM.local.props')" />
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+
+    <GameDir Condition="'$(GameDir)' == '' and '$(PSM_GAME_DIR)' != ''">$(PSM_GAME_DIR)</GameDir>
+    <GameDir Condition="'$(GameDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Probably Stolen</GameDir>
+    <GameDir>$(GameDir.TrimEnd('\'))</GameDir>
+    <ManagedDir>$(GameDir)\Probably Stolen_Data\Managed</ManagedDir>
+
+    <!-- 安装到 <游戏>\Mods\<ModFolderName>\；InstallMod=false 只编译、仍会写入 dist\ -->
+    <InstallMod Condition="'$(InstallMod)' == ''">true</InstallMod>
+  </PropertyGroup>
+</Project>

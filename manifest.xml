@@ -6,7 +6,7 @@
   <ModVersion>1.0</ModVersion>
   <Description>将模组属性「性能/效率/质量」改为「速度/节能/品质」，可选括号显示原名。</Description>
   <GameVersions>
-    <Version>1.0.0</Version>
+    <Version>1.0.0.13</Version>
   </GameVersions>
   <Prerequisites />
   <Assemblies>
