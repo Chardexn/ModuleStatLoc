@@ -6,12 +6,13 @@ using HarmonyLib;
 namespace ModuleStatLoc
 {
     /// <summary>
-    /// 中文语言下覆盖模组三项属性名。替换文本来自 Localization CSV，括号后缀按配置拼接。
+    /// 中文语言下覆盖模组三项属性名、对应物品名和机器说明书。属性短名才加括号后缀。
     /// </summary>
     [HarmonyPatch]
     internal static class LocOverridePatch
     {
         private const string MechanicTable = "Mechanic";
+        private const string ItemTable = "Item";
         private const string SuffixFormatKey = "suffix_format";
         private const string DefaultSuffixFormat = "{0}（{1}）";
 
@@ -20,6 +21,24 @@ namespace ModuleStatLoc
             "mech_module_stat_performance",
             "mech_module_stat_efficiency",
             "mech_module_stat_quality"
+        };
+
+        private static readonly HashSet<string> ItemKeys = new HashSet<string>
+        {
+            "item_system_module_performance_name",
+            "item_system_module_efficiancy_name",
+            "item_system_module_quality_name",
+            "item_alarm_instruction_flavor",
+            "item_desequencer_instruction_flavor",
+            "item_furnace_instruction_flavor",
+            "item_projector_instruction_flavor",
+            "item_moisture_farm_instruction_flavor",
+            "item_water_purifier_instruction_flavor",
+            "item_age_well_instruction_flavor",
+            "item_evaporator_instruction_flavor",
+            "item_3d_printer_instruction_flavor",
+            "item_hydroponic_instruction_flavor",
+            "item_dna_manipulator_instruction_flavor"
         };
 
         private static readonly Dictionary<string, string> TextCache = new Dictionary<string, string>();
@@ -41,16 +60,34 @@ namespace ModuleStatLoc
         #region MARK: Postfix
         private static void Postfix(string table, string key, ref string __result)
         {
-            if (table != MechanicTable || string.IsNullOrEmpty(key) || !StatKeys.Contains(key))
+            if (string.IsNullOrEmpty(table) || string.IsNullOrEmpty(key) || string.IsNullOrEmpty(__result))
             {
                 return;
             }
 
-            if (!IsChineseLocale() || string.IsNullOrEmpty(__result))
+            if (!IsChineseLocale())
             {
                 return;
             }
 
+            if (table == MechanicTable && StatKeys.Contains(key))
+            {
+                ApplyStatOverride(key, ref __result);
+                return;
+            }
+
+            if (table == ItemTable && ItemKeys.Contains(key))
+            {
+                string replacement = Loc(key);
+                if (replacement != key)
+                {
+                    __result = replacement;
+                }
+            }
+        }
+
+        private static void ApplyStatOverride(string key, ref string __result)
+        {
             string name = Loc(key);
             if (name == key)
             {

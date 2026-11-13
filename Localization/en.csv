@@ -10,3 +10,19 @@ suffix_format,{0}（{1}）
 cfg_suffix,Show original name after translation
 cfg_suffix_tip,None: new name only. Original: 速度（性能） using the vanilla Chinese name. English: 速度（Performance）. Takes effect the next time you load a save.
 dump_name,Dump module-related Chinese entries
+
+item_system_module_performance_name,速度模组
+item_system_module_efficiancy_name,节能模组
+item_system_module_quality_name,品质模组
+
+item_alarm_instruction_flavor,[模组影响]：\n节能影响功耗\n速度影响防盗率加成\n品质无影响
+item_desequencer_instruction_flavor,[模组影响]：\n节能影响功耗\n速度影响处理速度\n品质无影响\n插入解序器和识别卡。需要能量。耗时一夜。
+item_furnace_instruction_flavor,[模组影响]：\n节能影响功耗\n速度无影响\n品质影响纯度上限
+item_projector_instruction_flavor,[模组影响]：\n节能影响功耗\n速度影响吸引力（系数：0.25）\n品质影响吸引力（系数：0.5）
+item_moisture_farm_instruction_flavor,[模组影响]：\n节能影响功耗\n速度影响产量\n品质影响纯度
+item_water_purifier_instruction_flavor,[模组影响]：\n节能影响功耗\n速度影响每晚去除量\n品质影响纯度上限（系数：0.5）
+item_age_well_instruction_flavor,[模组影响]：\n节能影响功耗\n速度影响功耗\n品质：每125品质额外陈化1天\n在提供电力和一瓶已发酵完成的葡萄酒时会彻夜工作。
+item_evaporator_instruction_flavor,[模组影响]：\n节能影响功耗\n速度影响每晚蒸发量\n品质影响蒸气捕获量\n提供电力和水容器后，机器会在夜间运作。
+item_3d_printer_instruction_flavor,[模组影响]：\n节能影响功耗\n速度影响打印速度\n品质影响适用物品的打印品质（系数：0.5）
+item_hydroponic_instruction_flavor,[模组影响]：\n节能影响功耗\n速度影响生长速度（系数：0.5）\n品质影响产量上限（系数：0.5）
+item_dna_manipulator_instruction_flavor,应用：将已写入特性的DNA数据盘放入输入槽，将目标放入目标槽。目标会获得盘中的特性。若目标已具有该特性，则使其提升1级。每次成功应用后，数据盘的可用次数都会减少1次。\n提取：将空白DNA数据盘放入输出槽，将目标放入目标槽。系统会随机将目标的一项特性复制到数据盘上，并销毁目标，除非机器装有基因稳定模组。也可使用已写有目标所具备特性的数据盘代替空白盘，这次提取会增加该盘的使用次数。\n每次编辑都会增加目标的基因热度。热度和复杂度越高，下一次编辑就越慢，风险也越高，这种影响会持续到目标成熟。开启基因扫描仪可查看目标的基因信息。\n模组：基因稳定模组可让目标在提取后保留下来。特性筛选模组可将随机提取范围限定为正面或负面特性。精准提取模组在已写入特性的数据盘上使用后，可定向提取该特性。\n输出：每次操作后，数据盘都会弹出至输出托盘。切换机器开关可改为让数据盘留在原槽位。\n[模组影响]：\n节能影响功耗\n速度影响操作速度（系数0.5）\n品质影响成功率（系数0.5）
