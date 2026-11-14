@@ -1,12 +1,21 @@
+using System;
 using System.Collections.Generic;
+using UnityEngine.Localization.Settings;
+using UnityEngine.Localization.Tables;
 
 namespace ModuleStatLoc
 {
     /// <summary>
     /// 读档后刷新已生成物品上的模组名和说明书。这些字段在生成时拷贝，不会再查本地化表。
+    /// 必须挂 OnGameLoadedLate：Normal 触发时存档物品尚未 Decode。
+    /// 说明书标题从 Item 表扫描 `*_instruction_name`，游戏加新机器或改正文时会跟官方词条走。
     /// </summary>
     internal static class ItemTextRefresh
     {
+        private const string ItemTable = "Item";
+        private const string InstructionNameSuffix = "_instruction_name";
+        private const string NameSuffix = "_name";
+
         private static readonly Dictionary<string, string> ModuleNameKeys = new Dictionary<string, string>
         {
             ["system_module_performance"] = "item_system_module_performance_name",
@@ -14,35 +23,27 @@ namespace ModuleStatLoc
             ["system_module_quality"] = "item_system_module_quality_name"
         };
 
-        private static readonly string[][] FlavorReplacements =
+        private static readonly string[] FallbackInstructionPrefixes =
         {
-            new[] { "质量影响适用物品的打印质量", "品质影响适用物品的打印品质" },
-            new[] { "质量影响纯度上限", "品质影响纯度上限" },
-            new[] { "质量影响吸引力", "品质影响吸引力" },
-            new[] { "质量影响纯度", "品质影响纯度" },
-            new[] { "质量：每125质量额外陈化1天", "品质：每125品质额外陈化1天" },
-            new[] { "质量影响蒸气捕获量", "品质影响蒸气捕获量" },
-            new[] { "质量影响产量上限", "品质影响产量上限" },
-            new[] { "质量影响成功率", "品质影响成功率" },
-            new[] { "质量无影响", "品质无影响" },
-            new[] { "性能影响防盗率加成", "速度影响防盗率加成" },
-            new[] { "性能影响每晚去除量", "速度影响每晚去除量" },
-            new[] { "性能影响每晚蒸发量", "速度影响每晚蒸发量" },
-            new[] { "性能影响操作速度", "速度影响操作速度" },
-            new[] { "性能影响打印速度", "速度影响打印速度" },
-            new[] { "性能影响生长速度", "速度影响生长速度" },
-            new[] { "性能影响吸引力", "速度影响吸引力" },
-            new[] { "性能影响产量", "速度影响产量" },
-            new[] { "性能影响功耗", "速度影响功耗" },
-            new[] { "性能影响速度", "速度影响处理速度" },
-            new[] { "性能无影响", "速度无影响" },
-            new[] { "效率影响功耗", "节能影响功耗" }
+            "item_alarm_instruction",
+            "item_desequencer_instruction",
+            "item_furnace_instruction",
+            "item_projector_instruction",
+            "item_moisture_farm_instruction",
+            "item_water_purifier_instruction",
+            "item_age_well_instruction",
+            "item_evaporator_instruction",
+            "item_3d_printer_instruction",
+            "item_hydroponic_instruction",
+            "item_dna_manipulator_instruction"
         };
+
+        private static Dictionary<string, string> prefixByName;
+        private static string cachedLocale;
 
         public static void Run()
         {
-            string code = LocHelper.GetCurrentLocaleCode();
-            if (string.IsNullOrEmpty(code) || !code.StartsWith("zh", System.StringComparison.Ordinal))
+            if (!StatWords.IsChineseLocale())
             {
                 return;
             }
@@ -52,38 +53,190 @@ namespace ModuleStatLoc
                 return;
             }
 
-            foreach (GameItem item in EmporiumEntry.Instance.GetAllOwnedItems())
-            {
-                Refresh(item);
-            }
+            HashSet<GameItem> seen = new HashSet<GameItem>();
+            RefreshList(EmporiumEntry.Instance.GetAllOwnedItems(), seen);
+            RefreshList(EmporiumEntry.Instance.GetAllItems(), seen);
         }
 
-        private static void Refresh(GameItem item)
+        public static void RunAfterNewGame(string _)
         {
-            if (item == null)
+            Run();
+        }
+
+        #region MARK: 遍历
+        private static void RefreshList(List<GameItem> items, HashSet<GameItem> seen)
+        {
+            if (items == null)
             {
                 return;
             }
 
+            foreach (GameItem item in items)
+            {
+                if (item == null || !seen.Add(item))
+                {
+                    continue;
+                }
+
+                Refresh(item);
+            }
+        }
+        #endregion
+
+        #region MARK: 单件
+        private static void Refresh(GameItem item)
+        {
             if (ModuleNameKeys.TryGetValue(item.identifier, out string locKey))
             {
                 item.name = LocHelper.GetLocalizedItem(locKey);
+                return;
             }
 
-            if (!string.IsNullOrEmpty(item.flavorText) && item.flavorText.IndexOf("[模组影响]") >= 0)
+            if (!IsManualCandidate(item))
             {
-                item.flavorText = RewriteFlavor(item.flavorText);
+                return;
+            }
+
+            if (TryRefreshByInstructionName(item))
+            {
+                return;
+            }
+
+            if (StatWords.LooksLikeModuleImpact(item.flavorText))
+            {
+                item.flavorText = StatWords.Rewrite(item.flavorText);
             }
         }
 
-        private static string RewriteFlavor(string text)
+        private static bool IsManualCandidate(GameItem item)
         {
-            foreach (string[] pair in FlavorReplacements)
+            if (item.IsTag(MachineHelper.MANUAL_TAG))
             {
-                text = text.Replace(pair[0], pair[1]);
+                return true;
             }
 
-            return text;
+            if (item.identifier == "postit")
+            {
+                return true;
+            }
+
+            return StatWords.LooksLikeModuleImpact(item.flavorText);
         }
+
+        private static bool TryRefreshByInstructionName(GameItem item)
+        {
+            if (string.IsNullOrEmpty(item.name))
+            {
+                return false;
+            }
+
+            if (!PrefixByName().TryGetValue(item.name, out string prefix))
+            {
+                return false;
+            }
+
+            item.flavorText = LocHelper.GetLocalizedItem(prefix + "_flavor");
+            TryRefreshShort(item, prefix + "_short");
+            return true;
+        }
+
+        private static void TryRefreshShort(GameItem item, string key)
+        {
+            if (string.IsNullOrEmpty(item.shortDescription))
+            {
+                return;
+            }
+
+            string text = LocHelper.GetLocalizedItem(key);
+            if (string.IsNullOrEmpty(text) || text == key)
+            {
+                return;
+            }
+
+            if (LocHelper.TryParseMissingTranslation(text, out _, out _))
+            {
+                return;
+            }
+
+            item.shortDescription = text;
+        }
+        #endregion
+
+        #region MARK: 说明书词条
+        private static Dictionary<string, string> PrefixByName()
+        {
+            string locale = LocHelper.GetCurrentLocaleCode();
+            if (prefixByName != null && cachedLocale == locale)
+            {
+                return prefixByName;
+            }
+
+            cachedLocale = locale;
+            prefixByName = new Dictionary<string, string>();
+            if (!TryScanInstructionNames(prefixByName))
+            {
+                AddFallbackPrefixes(prefixByName);
+            }
+
+            return prefixByName;
+        }
+
+        private static bool TryScanInstructionNames(Dictionary<string, string> map)
+        {
+            StringTable table = LocalizationSettings.StringDatabase.GetTable(ItemTable);
+            if (table == null)
+            {
+                return false;
+            }
+
+            int found = 0;
+            foreach (StringTableEntry entry in table.Values)
+            {
+                string key = EntryKey(entry);
+                if (string.IsNullOrEmpty(key) || !key.EndsWith(InstructionNameSuffix, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                string name = LocHelper.GetLocalizedItem(key);
+                if (string.IsNullOrEmpty(name)
+                    || name == key
+                    || LocHelper.TryParseMissingTranslation(name, out _, out _))
+                {
+                    continue;
+                }
+
+                string prefix = key.Substring(0, key.Length - NameSuffix.Length);
+                map[name] = prefix;
+                found++;
+            }
+
+            return found > 0;
+        }
+
+        private static void AddFallbackPrefixes(Dictionary<string, string> map)
+        {
+            foreach (string prefix in FallbackInstructionPrefixes)
+            {
+                string name = LocHelper.GetLocalizedItem(prefix + NameSuffix);
+                if (string.IsNullOrEmpty(name) || name == prefix + NameSuffix)
+                {
+                    continue;
+                }
+
+                map[name] = prefix;
+            }
+        }
+
+        private static string EntryKey(StringTableEntry entry)
+        {
+            if (entry?.SharedEntry != null && !string.IsNullOrEmpty(entry.SharedEntry.Key))
+            {
+                return entry.SharedEntry.Key;
+            }
+
+            return Convert.ToString(entry?.Key);
+        }
+        #endregion
     }
 }

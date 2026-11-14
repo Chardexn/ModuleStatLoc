@@ -24,13 +24,15 @@ namespace ModuleStatLoc
         public void OnEnable()
         {
             ModHook.OnModAssetsLoaded += OnAssetsLoaded;
-            ModHook.OnGameLoadedNormal += ItemTextRefresh.Run;
+            ModHook.OnGameLoadedLate += ItemTextRefresh.Run;
+            ModHook.OnNewGameStarted += ItemTextRefresh.RunAfterNewGame;
         }
 
         public void OnDisable()
         {
             ModHook.OnModAssetsLoaded -= OnAssetsLoaded;
-            ModHook.OnGameLoadedNormal -= ItemTextRefresh.Run;
+            ModHook.OnGameLoadedLate -= ItemTextRefresh.Run;
+            ModHook.OnNewGameStarted -= ItemTextRefresh.RunAfterNewGame;
             ModHelper.RemoveDebugFunctions(MOD_ID);
         }
         #endregion

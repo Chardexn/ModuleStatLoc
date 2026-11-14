@@ -9,7 +9,12 @@ namespace ModuleStatLoc
     internal static class LocDump
     {
         private static readonly string[] Tables = { "Mechanic", "Item" };
-        private static readonly string[] Needles = { "性能", "效率", "质量" };
+        private static readonly string[] Needles =
+        {
+            StatWords.VanillaPerformance,
+            StatWords.VanillaEfficiency,
+            StatWords.VanillaQuality
+        };
 
         public static void Run()
         {

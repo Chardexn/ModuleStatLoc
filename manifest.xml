@@ -3,8 +3,8 @@
   <ID>module_stat_loc</ID>
   <Name>模组属性翻译优化</Name>
   <Author>kirkxia</Author>
-  <ModVersion>1.0</ModVersion>
-  <Description>将模组属性「性能/效率/质量」改为「速度/节能/品质」，可选括号显示原名。</Description>
+  <ModVersion>1.1</ModVersion>
+  <Description>将模组属性「性能/效率/质量」改为可选译名（默认速度/节能/品质），并同步机器说明书；可选括号显示原名。</Description>
   <GameVersions>
     <Version>1.0.0.13</Version>
   </GameVersions>

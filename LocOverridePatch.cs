@@ -1,7 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.Reflection;
 using HarmonyLib;
+using System.Reflection;
 
 namespace ModuleStatLoc
 {
@@ -15,35 +14,6 @@ namespace ModuleStatLoc
         private const string ItemTable = "Item";
         private const string SuffixFormatKey = "suffix_format";
         private const string DefaultSuffixFormat = "{0}（{1}）";
-
-        private static readonly HashSet<string> StatKeys = new HashSet<string>
-        {
-            "mech_module_stat_performance",
-            "mech_module_stat_efficiency",
-            "mech_module_stat_quality"
-        };
-
-        private static readonly HashSet<string> ItemKeys = new HashSet<string>
-        {
-            "item_system_module_performance_name",
-            "item_system_module_efficiancy_name",
-            "item_system_module_quality_name",
-            "item_alarm_instruction_flavor",
-            "item_desequencer_instruction_flavor",
-            "item_furnace_instruction_flavor",
-            "item_projector_instruction_flavor",
-            "item_moisture_farm_instruction_flavor",
-            "item_water_purifier_instruction_flavor",
-            "item_age_well_instruction_flavor",
-            "item_evaporator_instruction_flavor",
-            "item_3d_printer_instruction_flavor",
-            "item_hydroponic_instruction_flavor",
-            "item_dna_manipulator_instruction_flavor"
-        };
-
-        private static readonly Dictionary<string, string> TextCache = new Dictionary<string, string>();
-        private static string cachedLocale;
-        private static bool isChinese;
 
         #region MARK: 补丁目标
         private static MethodBase TargetMethod()
@@ -65,31 +35,37 @@ namespace ModuleStatLoc
                 return;
             }
 
-            if (!IsChineseLocale())
+            if (!StatWords.IsChineseLocale())
             {
                 return;
             }
 
-            if (table == MechanicTable && StatKeys.Contains(key))
+            if (table == MechanicTable)
             {
                 ApplyStatOverride(key, ref __result);
                 return;
             }
 
-            if (table == ItemTable && ItemKeys.Contains(key))
+            if (table != ItemTable)
             {
-                string replacement = Loc(key);
-                if (replacement != key)
-                {
-                    __result = replacement;
-                }
+                return;
+            }
+
+            if (IsModuleNameKey(key) || IsInstructionTextKey(key))
+            {
+                __result = StatWords.Rewrite(__result);
             }
         }
 
         private static void ApplyStatOverride(string key, ref string __result)
         {
-            string name = Loc(key);
+            string name = StatWords.ForMechanicKey(key);
             if (name == key)
+            {
+                return;
+            }
+
+            if (name == __result)
             {
                 return;
             }
@@ -100,7 +76,7 @@ namespace ModuleStatLoc
                     __result = FormatSuffix(name, __result);
                     break;
                 case SuffixMode.English:
-                    __result = FormatSuffix(name, Loc(key + "_en"));
+                    __result = FormatSuffix(name, ModEntry.L(key + "_en"));
                     break;
                 default:
                     __result = name;
@@ -109,39 +85,25 @@ namespace ModuleStatLoc
         }
         #endregion
 
-        #region MARK: 语言与缓存
-        private static bool IsChineseLocale()
+        #region MARK: 键判断
+        private static bool IsModuleNameKey(string key)
         {
-            string code = LocHelper.GetCurrentLocaleCode();
-            if (code != cachedLocale)
-            {
-                cachedLocale = code;
-                isChinese = !string.IsNullOrEmpty(code) && code.StartsWith("zh", StringComparison.Ordinal);
-                TextCache.Clear();
-            }
-
-            return isChinese;
+            return key == "item_system_module_performance_name"
+                || key == "item_system_module_efficiancy_name"
+                || key == "item_system_module_quality_name";
         }
 
-        private static string Loc(string csvKey)
+        private static bool IsInstructionTextKey(string key)
         {
-            if (TextCache.TryGetValue(csvKey, out string cached))
-            {
-                return cached;
-            }
-
-            string value = ModHelper.GetLocalized(ModEntry.MOD_ID, csvKey);
-            if (value != csvKey)
-            {
-                TextCache[csvKey] = value;
-            }
-
-            return value;
+            return key.EndsWith("_instruction_flavor", StringComparison.Ordinal)
+                || key.EndsWith("_instruction_short", StringComparison.Ordinal);
         }
+        #endregion
 
+        #region MARK: 后缀
         private static string FormatSuffix(string name, string suffix)
         {
-            string format = Loc(SuffixFormatKey);
+            string format = ModEntry.L(SuffixFormatKey);
             if (format == SuffixFormatKey)
             {
                 format = DefaultSuffixFormat;
